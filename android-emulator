@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# Standard Help Function
+Help() {
+  echo "
+Android Studio Emulator helper script.
+
+Summary:
+ This script was made to greatly simplify interactions for testing
+ with the official Android Emulator from Android Studio.
+
+Syntax:
+ android-emulator COMMAND OR AVD NAME [OPTIONS]
+
+Commands:
+ help			Print this Help page.
+ list-avd		Lists all available AVD.
+
+Options:
+ first-boot [FILE]	Sets up first boot, disabling verification.
+ 			Pass a file path as argument to push it during setup.
+
+ install-cert FILE	Installs a trusted PEM root CA Cert to the device.
+ 			You must pass the path to the cert as argument.
+
+ enable-proxy		Sets up the use of a proxy for request analysis.
+  " | less
+}
+
+# Resolve short auxiliary commands
+ResolveCommands() {
+  if [ "$1" == 'help' ]; then
+    Help
+    exit 0
+  elif [ "$1" == 'list-avd' ]; then
+    ls -d "$ANDROID_AVD_HOME"/*.avd | cut -d '/' -f6 | cut -d '.' -f1
+    exit 0
+  elif ! [ -d "$ANDROID_AVD_HOME/$1.avd" ]; then
+    echo 'Error: AVD was not declared or does not exist.'
+    echo 'Use the argument "help" to see the manual.'
+    exit 1
+  fi
+}
+
+# Resolve main options
+ParseOptions() {
+  if [ "$1" == 'first-boot' ]; then
+    dadb_wait
+    dadb root
+    dadb shell avbctl disable-verification
+    if [ -f "$2" ]; then
+      dadb push "$2" '/sdcard/Pictures/'
+    fi
+    dadb_reboot
+  elif [ "$1" == 'install-cert' ]; then
+    if ! [ -f "$2" ]; then
+      echo 'Error: No certificate found.'
+      echo 'Pass the path to the PEM cert file as an argument.'
+      exit 1
+    fi
+    CACERT="$(openssl x509 -inform PEM -subject_hash_old -in $2 | head -1).0"
+    dadb_wait
+    dadb root && dadb remount
+    dadb push "$2" "/system/etc/security/cacerts/$CACERT"
+    dadb shell chmod 644 "/system/etc/security/cacerts/$CACERT"
+    dadb_reboot
+  elif [ "$1" == 'enable-proxy' ]; then
+    echo "Proxy has been set as: $FLAGS"
+  elif [ -n "$1" ]; then
+    echo "Error: Invalid option: $1. Proceeding with default values."
+  fi
+}
+
+# Android Studio Environment
+export ANDROID_SDK_HOME="/home/$USER/.local/share/Android/Sdk"
+export ANDROID_AVD_HOME="/home/$USER/.android/avd"
+
+ResolveCommands "$1"
+
+# Set flags for emulator
+if [ "$2" == 'enable-proxy' ]; then
+  FLAGS='-http-proxy 127.0.0.1:8080'
+fi
+
+# Start Android Emulator in Background
+"$ANDROID_SDK_HOME/emulator/emulator" -avd $1 $FLAGS -dns-server 1.1.1.1 -writable-system -no-snapshot -no-metrics &>'/dev/null' &
+
+# Set environment for ADB command-chain
+DEVICE="$(sleep 5 && adb devices | tail -2 | head -1 | awk '{print $1}')"
+dadb(){ adb -s $DEVICE $@; }
+dadb_wait(){ dadb wait-for-device && sleep 5; }
+dadb_reboot(){ dadb reboot && echo 'Now rebooting....'; }
+
+ParseOptions "$2" "$3"
+
+dadb_wait
+dadb root && dadb remount
