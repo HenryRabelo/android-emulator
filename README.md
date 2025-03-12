@@ -25,7 +25,7 @@ This is a script created to aid with interactions on Android Emulator from Andro
 > For this script to run, it depends on a few programs: `adb`, `openssl` & `Android Studio`
 
 ### How to Run it
-To run the script, give executable permissions to the file and either run it at the current directory or put it at your user's `~/.local/bin` directory, to be run as a command.
+To run the script, give executable permission to the file and either run it at the current directory or put it at your user's `~/.local/bin` directory, to be run as a command.
 
 ```sh
 cd android-emulator
@@ -46,10 +46,9 @@ android-emulator Pixel_API_30 install-cert ~/cacert.pem
 ```
 
 ### How to Use it
-This script relies on you creating an AVD from an Android image without Google Play services, from Android Studio's VM Manager. After running the first-boot script, you will be in an Android environment with a writable system and root access.
+This script relies on you creating an AVD from an Android image that does not have Google Play services, from Android Studio's VM Manager. After running the first-boot script, you will be in an Android environment with a writable system and root access.
 
-Before being able to intercept requests with an intercepting proxy, you need to install your proxy's root CA Certificate, and after that shut down the Android VM, so you can launch it with the parameters for the proxy to work. From there, you are free to run external scripts to get a deeper insight on how an application runs and try to debug it.
-
+Before being able to intercept requests with an intercepting proxy, you need to install your proxy's root CA Certificate. After that shut down the Android VM, so it can be launched with the parameters pointing to the proxy. From there, you are free to run external scripts to get a deeper insight on how an application runs and try to debug it.
 
 <div align="center">
 
