@@ -44,7 +44,7 @@ ResolveCommands() {
     exit 0
   
   elif [ "$1" = 'list-avd' ]; then
-    find "$ANDROID_AVD_HOME"/*.avd -maxdepth 1 -type d | cut -d '/' -f6 | cut -d '.' -f1
+    find "$ANDROID_AVD_HOME"/*.avd -maxdepth 1 -type d | awk -F'/' '{print $NF}' | cut -d '.' -f1
     exit 0
   
   elif ! [ -d "$ANDROID_AVD_HOME/$1.avd" ]; then
