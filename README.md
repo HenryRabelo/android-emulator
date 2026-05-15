@@ -31,7 +31,7 @@ To run the script, give executable permission to the file and either run it at t
 cd android-emulator
 
 chmod +x $(pwd)/android-emulator
-cp $(pwd)/android-emulator ~/.local/bin/android-emulator
+cp $(pwd)/android-emulator.sh ~/.local/bin/android-emulator
 
 android-emulator help
 ```
